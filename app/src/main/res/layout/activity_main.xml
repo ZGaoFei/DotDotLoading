@@ -10,8 +10,9 @@
         android:id="@+id/dot_loading_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:dotColor="#00aacc"
+        android:layout_gravity="center"
+        app:animatorType="animatorOne"
         app:bgColor="#66cccccc"
-        app:animatorType="animatorOne"/>
+        app:dotColor="#00aacc" />
 
 </FrameLayout>

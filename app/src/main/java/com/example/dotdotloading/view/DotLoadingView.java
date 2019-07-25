@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 
@@ -26,8 +25,8 @@ import com.example.dotdotloading.R;
  */
 public class DotLoadingView extends View {
     private static final int DEFAULT_DOT_RADIUS = 10; // 默认小点的半径
-    private static final int DEFAULT_VIEW_PARAMS = 300; // 默认loadingview的宽高
-    private static final int DEFAULT_VIEW_RADIUS = 100; // 默认小点到圆心的距离
+    private static final int DEFAULT_VIEW_PARAMS = 250; // 默认loadingview的宽高
+    private static final int DEFAULT_VIEW_RADIUS = 75; // 默认小点到圆心的距离
     private static final int DEFAULT_DOT_NUM = 12; // 默认小点的个数，间距为360/12 = 30
     public static final int ANIMATOR_TYPE_ONE = 0;
     public static final int ANIMATOR_TYPE_TWO = 1;
@@ -36,8 +35,6 @@ public class DotLoadingView extends View {
     public static final int ANIMATOR_TYPE_FIVE = 4;
     public static final int ANIMATOR_TYPE_SIX = 5;
 
-    private int mWidth;
-    private int mHeight;
     private int mCenterX;
     private int mCenterY;
 
@@ -52,6 +49,10 @@ public class DotLoadingView extends View {
     private int mRadiusOffset; // dot的半径偏移量
     private boolean mIsRevert = false; // dot动画是否走完一遍
     private int mDotOffset; // dot移动偏移量
+
+    private int mDotParams; // dot到中心点的距离
+    private int mViewParams; // view的边长，总是比mDotParams大100,（左右上下留50的间距）
+    private int mPaddingInTop; // 允许loadingview向上平移的距离
 
     private ValueAnimator mAnimator; // 控制旋转角度的动画
     private ValueAnimator mTextAnimator;
@@ -72,6 +73,7 @@ public class DotLoadingView extends View {
         mBgColor = a.getColor(R.styleable.DotLoadingView_bgColor, Color.parseColor("#44cccccc"));
         mDotColor = a.getColor(R.styleable.DotLoadingView_dotColor, Color.RED);
         mAnimatorType = a.getInt(R.styleable.DotLoadingView_animatorType, 0);
+        mPaddingInTop = a.getDimensionPixelSize(R.styleable.DotLoadingView_paddingInTop, 0);
         a.recycle();
         init();
     }
@@ -120,11 +122,32 @@ public class DotLoadingView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        int paddingLeft = getPaddingLeft();
+        int paddingRight = getPaddingRight();
+        int paddingTop = getPaddingTop();
+        int paddingBottom = getPaddingBottom();
 
-        mWidth = w;
-        mHeight = h;
-        mCenterX = w / 2;
-        mCenterY = h / 2;
+        int width = w - paddingLeft - paddingRight;
+        int height = h - paddingTop - paddingBottom - mPaddingInTop;
+
+        mCenterX = width / 2 + paddingLeft;
+        mCenterY = height / 2 + paddingTop;
+
+        int dotParamsWidth = DEFAULT_VIEW_RADIUS;
+        int dotParamsHeight = DEFAULT_VIEW_RADIUS;
+        if (width < DEFAULT_VIEW_PARAMS) {
+            dotParamsWidth = width / 2 - 100;
+        }
+        if (height < DEFAULT_VIEW_PARAMS) {
+            dotParamsHeight = height / 2 - 100;
+        }
+        int dotParams = Math.min(dotParamsWidth, dotParamsHeight);
+        if (dotParams <= 0) {
+            dotParams = 0;
+        }
+
+        mDotParams = dotParams;
+        mViewParams = mDotParams * 2 + 100;
     }
 
     @Override
@@ -136,6 +159,7 @@ public class DotLoadingView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
         drawBg(canvas);
 
         switch (mAnimatorType) {
@@ -167,10 +191,10 @@ public class DotLoadingView extends View {
         resetPaint(mBgColor);
 
         RectF rectf = new RectF(
-                mCenterX - DEFAULT_VIEW_PARAMS / 2,
-                mCenterY - DEFAULT_VIEW_PARAMS / 2,
-                mCenterX + DEFAULT_VIEW_PARAMS / 2,
-                mCenterY + DEFAULT_VIEW_PARAMS / 2);
+                mCenterX - mViewParams / 2,
+                mCenterY - mViewParams / 2,
+                mCenterX + mViewParams / 2,
+                mCenterY + mViewParams / 2);
         canvas.drawRoundRect(rectf, 20, 20, mPaint);
     }
 
@@ -183,8 +207,8 @@ public class DotLoadingView extends View {
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
             currentAngle = angleNum * i + mOffset;
-            int x = (int) (DEFAULT_VIEW_RADIUS * Math.sin(Math.toRadians(currentAngle)));
-            int y = (int) (DEFAULT_VIEW_RADIUS * Math.cos(Math.toRadians(currentAngle)));
+            int x = (int) (mDotParams * Math.sin(Math.toRadians(currentAngle)));
+            int y = (int) (mDotParams * Math.cos(Math.toRadians(currentAngle)));
             canvas.drawCircle(mCenterX + x, mCenterY - y, DEFAULT_DOT_RADIUS, mPaint);
         }
     }
@@ -195,8 +219,8 @@ public class DotLoadingView extends View {
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
             currentAngle = angleNum * i;
-            int x = (int) (DEFAULT_VIEW_RADIUS * Math.sin(Math.toRadians(currentAngle)));
-            int y = (int) (DEFAULT_VIEW_RADIUS * Math.cos(Math.toRadians(currentAngle)));
+            int x = (int) (mDotParams * Math.sin(Math.toRadians(currentAngle)));
+            int y = (int) (mDotParams * Math.cos(Math.toRadians(currentAngle)));
             if (i == num) {
                 canvas.drawCircle(mCenterX + x, mCenterY - y, DEFAULT_DOT_RADIUS * 2, mPaint);
             } else {
@@ -211,8 +235,8 @@ public class DotLoadingView extends View {
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
             currentAngle = angleNum * i;
-            int x = (int) (DEFAULT_VIEW_RADIUS * Math.sin(Math.toRadians(currentAngle)));
-            int y = (int) (DEFAULT_VIEW_RADIUS * Math.cos(Math.toRadians(currentAngle)));
+            int x = (int) (mDotParams * Math.sin(Math.toRadians(currentAngle)));
+            int y = (int) (mDotParams * Math.cos(Math.toRadians(currentAngle)));
             if (i == num) {
                 canvas.drawCircle(mCenterX + x, mCenterY - y, DEFAULT_DOT_RADIUS + mRadiusOffset, mPaint);
             } else {
@@ -230,8 +254,8 @@ public class DotLoadingView extends View {
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
             currentAngle = angleNum * i;
-            int x = (int) (DEFAULT_VIEW_RADIUS * Math.sin(Math.toRadians(currentAngle)));
-            int y = (int) (DEFAULT_VIEW_RADIUS * Math.cos(Math.toRadians(currentAngle)));
+            int x = (int) (mDotParams * Math.sin(Math.toRadians(currentAngle)));
+            int y = (int) (mDotParams * Math.cos(Math.toRadians(currentAngle)));
             if (!mIsRevert) { // dot一个一个消失的效果
                 if (i >= num) {
                     canvas.drawCircle(mCenterX + x, mCenterY - y, DEFAULT_DOT_RADIUS, mPaint);
@@ -254,8 +278,8 @@ public class DotLoadingView extends View {
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
             currentAngle = angleNum * i + mDotOffset;
-            int x = (int) (DEFAULT_VIEW_RADIUS * Math.sin(Math.toRadians(currentAngle)));
-            int y = (int) (DEFAULT_VIEW_RADIUS * Math.cos(Math.toRadians(currentAngle)));
+            int x = (int) (mDotParams * Math.sin(Math.toRadians(currentAngle)));
+            int y = (int) (mDotParams * Math.cos(Math.toRadians(currentAngle)));
             if (!mIsRevert) {
                 if (i >= num) {
                     canvas.drawCircle(mCenterX + x, mCenterY - y, DEFAULT_DOT_RADIUS, mPaint);
@@ -282,8 +306,8 @@ public class DotLoadingView extends View {
                 } else {
                     currentAngle = angleNum * i;
                 }
-                int x = (int) (DEFAULT_VIEW_RADIUS * Math.sin(Math.toRadians(currentAngle)));
-                int y = (int) (DEFAULT_VIEW_RADIUS * Math.cos(Math.toRadians(currentAngle)));
+                int x = (int) (mDotParams * Math.sin(Math.toRadians(currentAngle)));
+                int y = (int) (mDotParams * Math.cos(Math.toRadians(currentAngle)));
                 if (i >= num) {
                     canvas.drawCircle(mCenterX + x, mCenterY - y, DEFAULT_DOT_RADIUS, mPaint);
                 }
@@ -293,8 +317,8 @@ public class DotLoadingView extends View {
                 } else {
                     currentAngle = angleNum * i;
                 }
-                int x = (int) (DEFAULT_VIEW_RADIUS * Math.sin(Math.toRadians(currentAngle)));
-                int y = (int) (DEFAULT_VIEW_RADIUS * Math.cos(Math.toRadians(currentAngle)));
+                int x = (int) (mDotParams * Math.sin(Math.toRadians(currentAngle)));
+                int y = (int) (mDotParams * Math.cos(Math.toRadians(currentAngle)));
                 if (i <= num) {
                     canvas.drawCircle(mCenterX + x, mCenterY - y, DEFAULT_DOT_RADIUS, mPaint);
                 }
