@@ -9,6 +9,9 @@
     <com.example.dotdotloading.view.DotLoadingView
         android:id="@+id/dot_loading_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:dotColor="#00aacc"
+        app:bgColor="#66cccccc"
+        app:animatorType="animatorOne"/>
 
 </FrameLayout>

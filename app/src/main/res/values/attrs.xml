@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="DotLoadingView">
+        <attr name="dotColor" format="color"/>
+        <attr name="bgColor" format="color"/>
+        <attr name="animatorType">
+            <enum name="animatorOne" value="0"/>
+            <enum name="animatorTwo" value="1"/>
+            <enum name="animatorThree" value="2"/>
+            <enum name="animatorFour" value="3"/>
+            <enum name="animatorFive" value="4"/>
+            <enum name="animatorSix" value="5"/>
+        </attr>
+    </declare-styleable>
+</resources>

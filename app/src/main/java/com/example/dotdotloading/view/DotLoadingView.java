@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -12,6 +13,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
+
+import com.example.dotdotloading.R;
 
 /**
  * 小点进度
@@ -24,12 +27,14 @@ import android.view.animation.LinearInterpolator;
 public class DotLoadingView extends View {
     private static final int DEFAULT_DOT_RADIUS = 10; // 默认小点的半径
     private static final int DEFAULT_VIEW_PARAMS = 300; // 默认loadingview的宽高
-    private static final int DEFAULT_DOT_COLOR = Color.GRAY; // 默认小点的颜色
     private static final int DEFAULT_VIEW_RADIUS = 100; // 默认小点到圆心的距离
     private static final int DEFAULT_DOT_NUM = 12; // 默认小点的个数，间距为360/12 = 30
     public static final int ANIMATOR_TYPE_ONE = 0;
     public static final int ANIMATOR_TYPE_TWO = 1;
     public static final int ANIMATOR_TYPE_THREE = 2;
+    public static final int ANIMATOR_TYPE_FOUR = 3;
+    public static final int ANIMATOR_TYPE_FIVE = 4;
+    public static final int ANIMATOR_TYPE_SIX = 5;
 
     private int mWidth;
     private int mHeight;
@@ -38,7 +43,9 @@ public class DotLoadingView extends View {
 
     private Paint mPaint;
 
-    private int mAnimatorType = ANIMATOR_TYPE_ONE;
+    private int mBgColor;
+    private int mDotColor;
+    private int mAnimatorType;
     private int mOffset; // 旋转角度偏移量
     private int num; // 动画执行到第几个dot
     private int mAnimatorDuration;
@@ -60,19 +67,29 @@ public class DotLoadingView extends View {
 
     public DotLoadingView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.DotLoadingView);
+        mBgColor = a.getColor(R.styleable.DotLoadingView_bgColor, Color.parseColor("#44cccccc"));
+        mDotColor = a.getColor(R.styleable.DotLoadingView_dotColor, Color.RED);
+        mAnimatorType = a.getInt(R.styleable.DotLoadingView_animatorType, 0);
+        a.recycle();
         init();
     }
 
     private void init() {
         mPaint = new Paint();
 
-        mAnimatorType = ANIMATOR_TYPE_THREE;
-        if (mAnimatorType == ANIMATOR_TYPE_ONE) {
-            mAnimatorDuration = 3600;
-        } else if (mAnimatorType == ANIMATOR_TYPE_TWO) {
-            mAnimatorDuration = 3600;
-        } else {
-            mAnimatorDuration = 1440;
+        switch (mAnimatorType) {
+            case ANIMATOR_TYPE_ONE:
+            case ANIMATOR_TYPE_TWO:
+            case ANIMATOR_TYPE_THREE:
+                mAnimatorDuration = 3600;
+                break;
+            case ANIMATOR_TYPE_FOUR:
+            case ANIMATOR_TYPE_FIVE:
+            case ANIMATOR_TYPE_SIX:
+                mAnimatorDuration = 1440;
+                break;
         }
     }
 
@@ -121,15 +138,25 @@ public class DotLoadingView extends View {
         super.onDraw(canvas);
         drawBg(canvas);
 
-        if (mAnimatorType == ANIMATOR_TYPE_ONE) {
-            drawDots(canvas);
-        } else if (mAnimatorType == ANIMATOR_TYPE_TWO) {
-            drawDots2(canvas); // 直接放大效果
-            // drawDots2Other(canvas); // 渐变放大效果
-        } else {
-            // drawDots3(canvas);
-            // drawDots3Other(canvas);
-            drawDots3Other2(canvas);
+        switch (mAnimatorType) {
+            case ANIMATOR_TYPE_ONE:
+                drawDots(canvas);
+                break;
+            case ANIMATOR_TYPE_TWO:
+                drawDots2(canvas);
+                break;
+            case ANIMATOR_TYPE_THREE:
+                drawDots2Other(canvas); // 渐变放大效果
+                break;
+            case ANIMATOR_TYPE_FOUR:
+                drawDots3(canvas);
+                break;
+            case ANIMATOR_TYPE_FIVE:
+                drawDots3Other(canvas);
+                break;
+            case ANIMATOR_TYPE_SIX:
+                drawDots3Other2(canvas);
+                break;
         }
     }
 
@@ -137,7 +164,7 @@ public class DotLoadingView extends View {
      * 在布局的中心位置画一个默认的圆角背景
      */
     private void drawBg(Canvas canvas) {
-        resetPaint(Color.parseColor("#44cccccc"));
+        resetPaint(mBgColor);
 
         RectF rectf = new RectF(
                 mCenterX - DEFAULT_VIEW_PARAMS / 2,
@@ -151,7 +178,7 @@ public class DotLoadingView extends View {
      * 画圆点
      */
     private void drawDots(Canvas canvas) {
-        resetPaint(Color.RED);
+        resetPaint(mDotColor);
         int angleNum = 360 / DEFAULT_DOT_NUM;
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
@@ -163,7 +190,7 @@ public class DotLoadingView extends View {
     }
 
     private void drawDots2(Canvas canvas) {
-        resetPaint(Color.RED);
+        resetPaint(mDotColor);
         int angleNum = 360 / DEFAULT_DOT_NUM;
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
@@ -179,7 +206,7 @@ public class DotLoadingView extends View {
     }
 
     private void drawDots2Other(Canvas canvas) {
-        resetPaint(Color.RED);
+        resetPaint(mDotColor);
         int angleNum = 360 / DEFAULT_DOT_NUM;
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
@@ -198,7 +225,7 @@ public class DotLoadingView extends View {
      * dot一个一个消失然后再一个一个显示的效果
      */
     private void drawDots3(Canvas canvas) {
-        resetPaint(Color.RED);
+        resetPaint(mDotColor);
         int angleNum = 360 / DEFAULT_DOT_NUM;
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
@@ -222,7 +249,7 @@ public class DotLoadingView extends View {
      * 不忍删除
      */
     private void drawDots3Other(Canvas canvas) {
-        resetPaint(Color.RED);
+        resetPaint(mDotColor);
         int angleNum = 360 / DEFAULT_DOT_NUM;
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
@@ -245,7 +272,7 @@ public class DotLoadingView extends View {
      * dot的显示和消失添加动画
      */
     private void drawDots3Other2(Canvas canvas) {
-        resetPaint(Color.RED);
+        resetPaint(mDotColor);
         int angleNum = 360 / DEFAULT_DOT_NUM;
         int currentAngle;
         for (int i = 0; i < DEFAULT_DOT_NUM; i++) {
@@ -296,14 +323,6 @@ public class DotLoadingView extends View {
                     mOffset = (int) valueAnimator.getAnimatedValue();
 
                     if (mAnimatorType == ANIMATOR_TYPE_ONE) {
-                        postInvalidate();
-                    } else if (mAnimatorType == ANIMATOR_TYPE_TWO) {
-                        int currentNum = mOffset / 30;
-                        if (num == currentNum) {
-                            return;
-                        }
-                        num = currentNum;
-
                         postInvalidate();
                     } else {
                         int currentNum = mOffset / 30;
@@ -378,14 +397,21 @@ public class DotLoadingView extends View {
     }
 
     public void allAnimatorStart() {
-        if (mAnimatorType == ANIMATOR_TYPE_ONE) {
-            animatorStart();
-        } else if (mAnimatorType == ANIMATOR_TYPE_TWO) {
-            animatorStart();
-            textAnimatorStart();
-        } else {
-            animatorStart();
-            dotAnimatorStart();
+        animatorStart();
+        switch (mAnimatorType) {
+            case ANIMATOR_TYPE_ONE:
+                break;
+            case ANIMATOR_TYPE_TWO:
+                break;
+            case ANIMATOR_TYPE_THREE:
+                textAnimatorStart();
+                break;
+            case ANIMATOR_TYPE_FOUR:
+                break;
+            case ANIMATOR_TYPE_FIVE:
+            case ANIMATOR_TYPE_SIX:
+                dotAnimatorStart();
+                break;
         }
     }
 
