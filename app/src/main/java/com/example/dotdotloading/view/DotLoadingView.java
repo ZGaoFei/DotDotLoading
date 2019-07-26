@@ -19,9 +19,7 @@ import com.example.dotdotloading.R;
  * 小点进度
  * 来源：模仿vivo x6 loading效果
  * <p>
- * 效果1：圆点在转圈
- * 效果2：圆点放大
- * 效果3：圆点叠加
+ * 支持6种效果
  */
 public class DotLoadingView extends View {
     private static final int DEFAULT_DOT_RADIUS = 10; // 默认小点的半径
@@ -420,7 +418,7 @@ public class DotLoadingView extends View {
         mDotAnimator.start();
     }
 
-    public void allAnimatorStart() {
+    private void allAnimatorStart() {
         animatorStart();
         switch (mAnimatorType) {
             case ANIMATOR_TYPE_ONE:
@@ -439,4 +437,33 @@ public class DotLoadingView extends View {
         }
     }
 
+    private void allStopAnimator() {
+        if (mAnimator != null && mAnimator.isRunning()) {
+            mAnimator.cancel();
+            mAnimator.removeAllUpdateListeners();
+        }
+        if (mTextAnimator != null && mTextAnimator.isRunning()) {
+            mTextAnimator.cancel();
+            mTextAnimator.removeAllUpdateListeners();
+        }
+        if (mDotAnimator != null && mDotAnimator.isRunning()) {
+            mDotAnimator.cancel();
+            mDotAnimator.removeAllUpdateListeners();
+        }
+        mAnimator = null;
+        mTextAnimator = null;
+        mDotAnimator = null;
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        allAnimatorStart();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        allStopAnimator();
+    }
 }
